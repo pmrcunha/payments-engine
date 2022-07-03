@@ -36,10 +36,10 @@ fn process_csv(path: &Path) -> Result<String, Box<dyn Error>> {
 
         let account_balance = match account_balances.entry(transaction.client_id) {
             // If the client already exists, get its balance
-            Entry::Occupied(e) => &mut *e.into_mut(),
+            Entry::Occupied(e) => e.into_mut(),
             // If the client doesn't exist, insert it and get a new balance
             Entry::Vacant(e) => {
-                &mut *e.insert(AccountBalance {
+                e.insert(AccountBalance {
                     client: transaction.client_id,
                     available: 0.0,
                     held: 0.0,
