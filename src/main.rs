@@ -209,6 +209,20 @@ mod tests {
     }
 
     #[test]
+    fn test_missing_dispute_resolve() {
+        let expected = r"client, available, held, total, locked
+1, 1.0000, 0.0000, 1.0000, false";
+        test_csv("sample_files/resolve_missing_dispute.csv", expected);
+    }
+
+    #[test]
+    fn test_missing_dispute_chargeback() {
+        let expected = r"client, available, held, total, locked
+1, 1.0000, 0.0000, 1.0000, false";
+        test_csv("sample_files/chargeback_missing_dispute.csv", expected);
+    }
+
+    #[test]
     fn test_dispute_chargeback() {
         let expected = r"client, available, held, total, locked
 1, 0.0000, 0.0000, 0.0000, true";
