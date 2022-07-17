@@ -188,12 +188,23 @@ mod tests {
     }
 
     #[test]
-    fn test_missing_transactions() {
+    fn test_missing_tx_dispute() {
         let expected = r"client, available, held, total, locked
 1, 1.0000, 0.0000, 1.0000, false";
-
         test_csv("sample_files/dispute_missing_transaction.csv", expected);
+    }
+
+    #[test]
+    fn test_missing_tx_resolve() {
+        let expected = r"client, available, held, total, locked
+1, 1.0000, 0.0000, 1.0000, false";
         test_csv("sample_files/resolve_missing_transaction.csv", expected);
+    }
+
+    #[test]
+    fn test_missing_tx_chargeback() {
+        let expected = r"client, available, held, total, locked
+1, 1.0000, 0.0000, 1.0000, false";
         test_csv("sample_files/chargeback_missing_transaction.csv", expected);
     }
 
