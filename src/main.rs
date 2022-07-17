@@ -1,5 +1,6 @@
 mod transactions;
 mod accounts;
+mod custom_errors;
 
 use std::collections::HashMap;
 use std::collections::btree_map::{BTreeMap, Entry};
@@ -9,6 +10,7 @@ use std::path::Path;
 use std::process;
 use transactions::{Transaction, TransactionType};
 use accounts::AccountBalance;
+use custom_errors::{TransactionRecordError, TransactionErrorType};
 
 /// Takes the path to a CSV file with transactions and outputs 
 /// the account balances.
@@ -55,22 +57,25 @@ fn process_csv(path: &Path) -> Result<String, Box<dyn Error>> {
         match transaction.tx_type {
             TransactionType::Deposit => {
                 // Handle a deposit
-                let amount = transaction.amount.expect("A deposit must have an amount");
-                account_balance.available += amount;
-                deposit_transaction_amounts.insert(transaction.tx_id, amount);
+                if let Some(amount) = transaction.amount {
+                    account_balance.available += amount;
+                    deposit_transaction_amounts.insert(transaction.tx_id, amount);
+                } else {
+                    return Err(Box::new(TransactionRecordError{ error_type: TransactionErrorType::NoDepositAmount}))
+                }
             }
             TransactionType::Withdrawal => {
                 // Handle an withdrawal
-                let amount = transaction
-                    .amount
-                    .expect("An withdrawal must have an amount");
-
-                let new_balance = account_balance.available - amount;
-                if new_balance >= 0.0 {
-                    account_balance.available = new_balance;
+                if let Some(amount) = transaction.amount {
+                    let new_balance = account_balance.available - amount;
+                    if new_balance >= 0.0 {
+                        account_balance.available = new_balance;
+                    } else {
+                        // Insuficient funds, ignore
+                        continue;
+                    }
                 } else {
-                    // Insuficient funds, ignore
-                    continue;
+                    return Err(Box::new(TransactionRecordError{ error_type: TransactionErrorType::NoWithdrawalAmount}))
                 }
             }
             TransactionType::Dispute => {
@@ -136,7 +141,12 @@ fn process_csv(path: &Path) -> Result<String, Box<dyn Error>> {
 
 fn main() {
     // Get CSV path from the command arguments
-    let csv_file = env::args().nth(1).expect("No file path in the input arguments");
+    
+    let csv_file = if let Some(file_path) = env::args().nth(1) {file_path} else {
+        println!("No file path in the input arguments");
+        // We cannot continue without a CSV file, so we exit with an error code.
+        process::exit(1);
+    };
 
     // Process the CSV and abort on uncaught errors
     match process_csv(&Path::new(&csv_file)) {
